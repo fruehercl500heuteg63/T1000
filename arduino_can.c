@@ -5,6 +5,7 @@
  * Copyright (C) 2020 Seeed Technology Co.,Ltd.
  */
 #include <SPI.h>
+gruezi miteinand
 
 #define CAN_2515
 // #define CAN_2518FD
