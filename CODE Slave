@@ -1,10 +1,21 @@
+/*
+    ESP-NOW Broadcast Slave
+    Lucas Saavedra Vaz - 2024
+
+    This sketch demonstrates how to receive broadcast messages from a master device using the ESP-NOW protocol.
+
+    The master device will broadcast a message every 5 seconds to all devices within the network.
+
+    The slave devices will receive the broadcasted messages. If they are not from a known master, they will be registered as a new master
+    using a callback function.
+*/
+
 #include "ESP32_NOW.h"
 #include "WiFi.h"
 #include <esp_mac.h>  // For the MAC2STR and MACSTR macros
 #include <Adafruit_GFX.h>
 #include <Adafruit_ST7789.h>
 #include <SPI.h>
-
 #include <vector>
 
 /* Definitions */
@@ -15,18 +26,17 @@
 #define TFT_DC 16
 
 Adafruit_ST7789 tft = Adafruit_ST7789(TFT_CS, TFT_DC, TFT_RST);
+/* Definitions */
 
 /* Classes */
 
-typedef struct Data {
-  int Tank;
-  int Schiebedach;
-} Data;
+// Creating a new class that inherits from the ESP_NOW_Peer class is required.
 
-Data incomingReadings;
+typedef struct test_data{
+  char message[32];
+}test_data;
 
-int incomingTank;
-int incomingSchiebedach;
+test_data test;
 
 class ESP_NOW_Peer_Class : public ESP_NOW_Peer {
 public:
@@ -47,18 +57,21 @@ public:
 
   // Function to print the received messages from the master
   void onReceive(const uint8_t *data, size_t len, bool broadcast) {
+ 
+  if(len == sizeof(test_data)){
+    test_data received_data;
+    memcpy(&received_data, data, sizeof(test_data));
+
     tft.fillScreen(ST77XX_BLACK); // Clear the screen
     tft.setCursor(10, 10);
     tft.printf("Received a message from master " MACSTR " (%s)\n", MAC2STR(addr()), broadcast ? "broadcast" : "unicast");
-    memcpy(&incomingReadings, data, sizeof(incomingReadings));
-    incomingTank = incomingReadings.Tank;
-    incomingSchiebedach = incomingReadings.Schiebedach;
-
-    // Display the received data
-    tft.setCursor(10, 50);
-    tft.printf("Tank Level: %d\n", incomingTank);
-    tft.setCursor(10, 80);
-    tft.printf("Sunroof: %d%%\n", incomingSchiebedach);
+    tft.printf("  Message: %s\n", received_data.message);
+  }
+else{
+  tft.fillScreen(ST77XX_BLACK); // Clear the screen
+  tft.setCursor(10, 10);
+  tft.printf("ES ist ein Fehler aufgetreten");
+}
   }
 };
 
@@ -85,7 +98,7 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
   } else {
     // The slave will only receive broadcast messages
     log_v("Received a unicast message from " MACSTR, MAC2STR(info->src_addr));
-    log_v("Ignoring the message");
+    log_v("Igorning the message");
   }
 }
 
@@ -93,12 +106,15 @@ void register_new_master(const esp_now_recv_info_t *info, const uint8_t *data, i
 
 void setup() {
   Serial.begin(115200);
+
   tft.init(240, 280);
   tft.setRotation(1);
   tft.fillScreen(ST77XX_BLACK);
   tft.setTextColor(ST77XX_WHITE);
   tft.setTextSize(2);
   tft.setCursor(10, 10);
+
+
 
   while (!Serial) {
     delay(10);
@@ -120,7 +136,7 @@ void setup() {
   // Initialize the ESP-NOW protocol
   if (!ESP_NOW.begin()) {
     Serial.println("Failed to initialize ESP-NOW");
-    Serial.println("Rebooting in 5 seconds...");
+    Serial.println("Reeboting in 5 seconds...");
     delay(5000);
     ESP.restart();
   }
@@ -129,8 +145,10 @@ void setup() {
   ESP_NOW.onNewPeer(register_new_master, NULL);
 
   Serial.println("Setup complete. Waiting for a master to broadcast a message...");
+  tft.printf("Waiting for Master...");
 }
 
 void loop() {
   delay(1000);
 }
+
