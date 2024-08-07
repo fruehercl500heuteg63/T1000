@@ -1,3 +1,5 @@
+
+
 #include <mcp_can.h>
 #include <SPI.h>
 
@@ -31,9 +33,9 @@ void loop() {
     CAN0.readMsgBuf(&rxId, &len, rxBuf);  // Lese Daten: len = Datenlänge, buf = Datenbyte(s)
     
     if ((rxId & 0x80000000) == 0x80000000)  // Bestimme, ob die ID Standard (11 Bit) oder erweitert (29 Bit) ist
-      sprintf(msgString, "Erweiterte ID: 0x%.8lX  DLC: %1d  Daten:", (rxId & 0x1FFFFFFF), len);
+      sprintf(msgString, "Erweiterte ID: %.8lX  DLC: %1d  Daten:", (rxId & 0x1FFFFFFF), len);
     else
-      sprintf(msgString, "Standard ID: 0x%.3lX       DLC: %1d  Daten:", rxId, len);
+      sprintf(msgString, "Standard ID: %.3lX       DLC: %1d  Daten:", rxId, len);
   
     Serial.print(msgString);
   
@@ -42,7 +44,7 @@ void loop() {
       Serial.print(msgString);
     } else {
       for (byte i = 0; i < len; i++) {
-        sprintf(msgString, " 0x%.2X", rxBuf[i]);
+        sprintf(msgString, " %.2X", rxBuf[i]);
         Serial.print(msgString);
       }
     }
@@ -53,4 +55,4 @@ void loop() {
 
 /*********************************************************************************************************
   END FILE
-*********************************************************************************************************/
+**
