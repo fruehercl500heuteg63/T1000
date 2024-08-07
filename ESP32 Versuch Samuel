@@ -10,7 +10,7 @@ void setup() {
     
     // Initialisiere das MCP2515-Modul
     mcp2515.reset();
-    mcp2515.setBitrate(CAN_500KBPS, MCP_8MHZ); // 500 kbps bei 8 MHz Quarz
+    mcp2515.setBitrate(CAN_250KBPS, MCP_8MHZ); // 500 kbps bei 8 MHz Quarz
     mcp2515.setNormalMode();
     
     Serial.println("MCP2515 Initialisiert!");
