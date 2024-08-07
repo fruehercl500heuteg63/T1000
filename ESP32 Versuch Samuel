@@ -38,4 +38,6 @@ void loop() {
             Serial.print(rxBuf[i], HEX);
             Serial.print(" ");
         }
+    }
+}
         
