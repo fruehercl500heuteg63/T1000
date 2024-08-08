@@ -1,0 +1,49 @@
+#include <SPI.h>
+#include "mcp2515_can.h"
+
+// Set the CS and INT pins
+const int SPI_CS_PIN = 5; // Passen Sie diesen Pin entsprechend Ihrer Verkabelung an
+const int CAN_INT_PIN = 2;
+
+mcp2515_can CAN(SPI_CS_PIN); // Set CS pin for CAN
+
+void setup() {
+    Serial.begin(115200);
+    while (!Serial) {}
+
+    // Initialize CAN at 250kbps
+    while (CAN_OK != CAN.begin(CAN_250KBPS)) {
+        Serial.println(F("CAN init fail, retry..."));
+        delay(100);
+    }
+    Serial.println(F("CAN init ok!"));
+}
+
+uint32_t id;
+uint8_t type; // bit0: ext, bit1: rtr
+uint8_t len;
+byte cdata[8] = {0};
+
+void loop() {
+    // Check if data is available
+    if (CAN_MSGAVAIL != CAN.checkReceive()) {
+        return;
+    }
+
+    // Read the data, len: data length, buf: data buffer
+    CAN.readMsgBuf(&len, cdata);
+
+    id = CAN.getCanId();
+
+    // Check the specific CAN ID
+    if (true) {
+        // Print the raw data bytes
+        Serial.print("Data Field: ");
+        for (int i = 0; i < len; i++) {
+            Serial.print(cdata[i], HEX);
+            Serial.print(" ");
+        }
+        Serial.println();
+    }
+}
+

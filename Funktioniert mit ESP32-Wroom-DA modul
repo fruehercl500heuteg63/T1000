@@ -1,0 +1,58 @@
+
+
+#include <mcp_can.h>
+#include <SPI.h>
+
+long unsigned int rxId;
+unsigned char len = 0;
+unsigned char rxBuf[8];
+char msgString[128];  // Array zur Speicherung des seriellen Strings
+
+#define CAN0_INT 4        // Set INT auf GPIO 4 (Interrupt-Pin)
+MCP_CAN CAN0(5);          // Set CS auf GPIO 5 (Chip Select Pin)
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Initialisiere MCP2515 bei 8MHz mit einer Baudrate von 250kb/s
+  if(CAN0.begin(MCP_ANY, CAN_250KBPS, MCP_8MHZ) == CAN_OK) {
+    Serial.println("MCP2515 Erfolgreich Initialisiert!");
+  } else {
+    Serial.println("Fehler bei der Initialisierung des MCP2515...");
+  }
+  
+  CAN0.setMode(MCP_NORMAL);  // Setze den Betriebsmodus auf "normal", damit der MCP2515 ACKs sendet
+
+  pinMode(CAN0_INT, INPUT);  // Konfiguriere den Interrupt-Pin als Eingang
+  
+  Serial.println("MCP2515 Bibliothek Empfangsbeispiel...");
+}
+
+void loop() {
+  if (!digitalRead(CAN0_INT)) {  // Wenn der CAN0_INT-Pin niedrig ist, lese den Empfangspuffer aus
+    CAN0.readMsgBuf(&rxId, &len, rxBuf);  // Lese Daten: len = Datenlänge, buf = Datenbyte(s)
+    
+    if ((rxId & 0x80000000) == 0x80000000)  // Bestimme, ob die ID Standard (11 Bit) oder erweitert (29 Bit) ist
+      sprintf(msgString, "Erweiterte ID: %.8lX  DLC: %1d  Daten:", (rxId & 0x1FFFFFFF), len);
+    else
+      sprintf(msgString, "Standard ID: %.3lX       DLC: %1d  Daten:", rxId, len);
+  
+    Serial.print(msgString);
+  
+    if ((rxId & 0x40000000) == 0x40000000) {  // Bestimme, ob die Nachricht ein Remote Request Frame ist
+      sprintf(msgString, " REMOTE REQUEST FRAME");
+      Serial.print(msgString);
+    } else {
+      for (byte i = 0; i < len; i++) {
+        sprintf(msgString, " %.2X", rxBuf[i]);
+        Serial.print(msgString);
+      }
+    }
+        
+    Serial.println();
+  }
+}
+
+/*********************************************************************************************************
+  END FILE
+**
