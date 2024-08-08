@@ -1,0 +1,228 @@
+
+#include <iostream>
+#include <vector>
+#include <string>
+#include <math.h>
+
+using namespace std;
+
+vector<int> rawHexToInt (string hex /*, int bitLength, int firstByte, int firstBit*/) {      //für Kilometer, Koordinaten und Date/Time, erstellt Vektor, der den Hex Zahlen Int Zahlen zuordnet und evtl. nicht genannte Hex Zahlen mit 0-Werten auffüllt
+    int charCounter = 0;  //zählt übergebenen String hoch
+    vector<int> Coefficients;
+    int keySpaceCounter = 0;
+    short counterPlaceValues = 0;
+    bool permitEnd = 0;
+    while (permitEnd == 0){       //HexStrings müssen mit \n beendet werden.
+        if (hex[charCounter] == ' '){
+            keySpaceCounter++;
+            charCounter++;
+        } else {
+            if (((hex[charCounter + 1] == ' ')||(hex[charCounter + 1] == '\0')) && ((hex[charCounter - 1] == ' ')||(Coefficients.empty() == 1))){
+                Coefficients.push_back(0);
+            } 
+            if (hex[charCounter] == '0') Coefficients.push_back(0);
+            if (hex[charCounter] == '1') Coefficients.push_back(1);
+            if (hex[charCounter] == '2') Coefficients.push_back(2);
+            if (hex[charCounter] == '3') Coefficients.push_back(3);
+            if (hex[charCounter] == '4') Coefficients.push_back(4);
+            if (hex[charCounter] == '5') Coefficients.push_back(5); 
+            if (hex[charCounter] == '6') Coefficients.push_back(6); 
+            if (hex[charCounter] == '7') Coefficients.push_back(7);
+            if (hex[charCounter] == '8') Coefficients.push_back(8);
+            if (hex[charCounter] == '9') Coefficients.push_back(9);
+            if (hex[charCounter] == 'A') Coefficients.push_back(10);
+            if (hex[charCounter] == 'B') Coefficients.push_back(11);
+            if (hex[charCounter] == 'C') Coefficients.push_back(12); 
+            if (hex[charCounter] == 'D') Coefficients.push_back(13); 
+            if (hex[charCounter] == 'E') Coefficients.push_back(14); 
+            if (hex[charCounter] == 'F') Coefficients.push_back(15);
+            charCounter++;
+        }
+        if (hex[charCounter] == '\0') {
+            
+            permitEnd = 1;
+        }
+    }
+    /*for (size_t i = 0; i < Coefficients.size(); ++i) {            Zum DEBUGGEN
+        cout << Coefficients[i] << " "; // Ausgabe des aktuellen Elements
+    }
+    cout << endl; // Zeilenumbruch nach der Ausgabe aller Elemente
+    */
+    //Nun liegt ein Array mit Koeffizienten für die Stellenwertigkeit vor
+    return Coefficients;
+}
+
+float tankLvl (string hex) {      //für Tank, benutzt als einziges nicht rawHexToInt (eher rawHexToBinary) 
+    int keySpaceCounter = 0; //für
+    int charCounter = 0;  //zählt übergebenen String hoch
+    string binaries = "";
+    bool permitEnd = 0;
+    while (permitEnd == 0){       //HexStrings müssen mit \n beendet werden.
+        if (hex[charCounter] == ' '){
+            keySpaceCounter++;
+            charCounter++;
+        } else {
+            if (((hex[charCounter + 1] == ' ')||(hex[charCounter + 1] == '\0')) && (hex[charCounter - 1] == ' ')){
+                binaries += "0000";
+            } 
+            if (hex[charCounter] == '0') binaries += "0000";
+            if (hex[charCounter] == '1') binaries += "0001";
+            if (hex[charCounter] == '2') binaries += "0010";
+            if (hex[charCounter] == '3') binaries += "0011";
+            if (hex[charCounter] == '4') binaries += "0100";
+            if (hex[charCounter] == '5') binaries += "0101";
+            if (hex[charCounter] == '6') binaries += "0110";
+            if (hex[charCounter] == '7') binaries += "0111";
+            if (hex[charCounter] == '8') binaries += "1000";
+            if (hex[charCounter] == '9') binaries += "1001";
+            if (hex[charCounter] == 'A') binaries += "1010";
+            if (hex[charCounter] == 'B') binaries += "1011";
+            if (hex[charCounter] == 'C') binaries += "1100";
+            if (hex[charCounter] == 'D') binaries += "1101";
+            if (hex[charCounter] == 'E') binaries += "1110";
+            if (hex[charCounter] == 'F') binaries += "1111";
+            charCounter++;
+        }
+        if (hex[charCounter] == '\0') {
+                permitEnd = 1;
+            }
+    }
+    cout << binaries << endl;
+    int coefficientValue = 1024;
+    float tankLvl = 0;
+    const short offset = 40;
+    for (int i = 0; i < 11; i++){       //11: Bitlänge für Tankinhalt
+        cout << binaries[offset+i] << endl;
+        if(binaries[offset+i]=='1'){
+            tankLvl += coefficientValue;
+            cout << tankLvl << endl;
+        }
+        
+        coefficientValue/=2;
+
+    }
+    
+    cout << tankLvl << endl;
+    tankLvl /= 10;
+    return tankLvl;     //Wenn tankLvl == 204.7 --> Fehler liegt vor, Daten sind nicht verfügbar laut Diagnoseportal
+}
+
+float kilometers(string hexString){
+    vector<int> kilometers = rawHexToInt(hexString);
+    int coefficientValue = 1;
+    float result = 0;
+    for (int hexCounter = 0; hexCounter < 6; hexCounter++){
+        result += kilometers[hexCounter + 1]*coefficientValue; 
+        coefficientValue *= 16;
+        result += kilometers[hexCounter]*coefficientValue; 
+        coefficientValue *= 16;
+        hexCounter++;
+    }
+    result /= 10;
+    return result;
+}
+int dateTime(char type, String hexString){                      //für Stunden , Minuten, Sekunden, Tag, Monat, Jahr müssen die chars 'h', 'm', 's', 'D', 'M' und 'Y' angegeben werden
+    vector<int> rawCoefficients = rawHexToInt(hexString);
+    int rawCoefficients = rawHexToInt(hex);
+    float result = 0;
+    if (type == 'h') {
+        result += rawCoefficients[1]; 
+        result += rawCoefficients[0]*16; 
+    }
+    if (type == 'm') {
+        result += rawCoefficients[3]; 
+        result += rawCoefficients[2]*16; 
+    }
+    if (type == 's') {
+        result += rawCoefficients[5]; 
+        result += rawCoefficients[4]*16; 
+    }
+    if (type == 'D') {
+        result += rawCoefficients[7]; 
+        result += rawCoefficients[6]*16;
+
+    }
+    if (type == 'M') {
+        result += rawCoefficients[9]; 
+        result += rawCoefficients[8]*16; 
+    }
+    if (type == 'Y') {
+        result += rawCoefficients[11]; 
+        result += rawCoefficients[10]*16; 
+        result += rawCoefficients[12]*100;
+        result += rawCoefficients[13]*1000;
+    }
+    return result;
+}
+
+
+//Bsp für Funktionsaufruf: printf(coordinates('s', true, "DA 8D A9 62 2D CE 97 86"));
+int coordinates(char type, bool isLongitude, string hex) {//wenn latitude == 1 --> Nach Breitengrad wird gesucht, sonst nach geograph. Länge //type: 'd' -> Degrees, 'm' -> Minutes, 's' -> Seconds, 'a' -> mas, 'b' -> all (nur Latitude oder nur Longitude)
+    vector<int> rawCoefficients = rawHexToInt(hex);
+    float result = 0;
+    bool isNegative = 0;
+    int coefficientValue = 1;
+    const int offset = 8;
+    for (int hexCounter = (0 + isLongitude*offset); hexCounter < (8 + offset); hexCounter++){
+        result += rawCoefficients[hexCounter + 1]*coefficientValue; 
+        coefficientValue *= 16;
+        result += rawCoefficients[hexCounter]*coefficientValue; 
+        coefficientValue *= 16;
+        hexCounter++;
+    }
+    //Nun ist das Ergebnis bereit.
+    result-=(1073741824*(1+isLongitude));
+    if (result < 0){
+        isNegative = 1;
+        result *= (-1);
+    }
+    result*=(90/1073741823.5);
+    int degrees = floor(result);
+    if(type == 'd'){
+        return degrees;
+    } else {
+        result -= degrees;
+        result *=60;
+        int minutes = floor(result);
+        if(type == 'm'){
+            return minutes;
+        } else {
+            result -= minutes;
+            result *=60;
+            int seconds = floor(result);
+            if(type == 's'){
+                return seconds;
+            } else {
+                result -= seconds;
+                result *=1000;
+                int mas = floor(result);
+                if(type == 'a'){
+                    return mas;
+                } else {/*          //Man bekommt keinen String, sondern nur einzeln Int-Werte von Grad, Minuten, Sekunden und Mas
+                    string resultString = "";
+                    resultString += to_string(degrees);
+                    resultString += "° ";
+                    resultString += to_string(minutes);
+                    resultString += "' ";
+                    resultString += to_string(degrees);
+                    resultString += ".";
+                    resultString += to_string(degrees);
+                    resultString += "'' ";
+                    if(isNegative == 1){
+                        if(offset == 0){
+                            resultString += "S";
+                        } else {
+                            resultString += "W";
+                        }
+                    }else{
+                        if(offset == 0){
+                            resultString += "N";
+                        } else {
+                            resultString += "E";
+                        }
+                    }*/
+                }
+            }
+        }
+    }
+}
